@@ -297,4 +297,5 @@ _(Thêm ít nhất 5 ảnh chụp màn hình các trang chính sau khi hoàn thi
 4. Dashboard Admin + Bảng phê duyệt (`/admin/dashboard`)
 5. Trang "Sự kiện của tôi" của sinh viên (`/my-registrations`)
 #   p h u _ x u a n _ e v e n t s  
+ #   p h u _ x u a n _ e v e n t s  
  

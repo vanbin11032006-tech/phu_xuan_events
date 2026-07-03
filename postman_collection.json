@@ -1,0 +1,452 @@
+{
+	"info": {
+		"_postman_id": "phu-xuan-events-api-collection",
+		"name": "PXU Events API",
+		"description": "Postman Collection cho hệ thống Quản lý Sự kiện Trường Đại học Phú Xuân.\n\n## Cách dùng:\n1. Import collection này vào Postman\n2. Tạo Environment với biến `base_url = http://127.0.0.1:8000` và `token = (lấy sau khi login)`\n3. Gọi POST /api/v1/auth/login trước, token sẽ tự động lưu vào biến môi trường",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.success && json.token) {",
+									"    pm.collectionVariables.set('token', json.token);",
+									"    pm.environment.set('token', json.token);",
+									"    console.log('Token saved:', json.token);",
+									"}",
+									"pm.test('Login successful', () => {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.expect(json.token).to.be.a('string');",
+									"});",
+									"pm.test('Returns user object', () => {",
+									"    pm.expect(json.user).to.have.property('email');",
+									"    pm.expect(json.user).to.have.property('role');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"student@pxu.edu.vn\",\n    \"password\": \"password\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/login",
+						"description": "Đăng nhập và lấy Sanctum token.\n\n**Test accounts:**\n- Admin: admin@pxu.edu.vn / password\n- Organizer: organizer@pxu.edu.vn / password\n- Student: student@pxu.edu.vn / password"
+					}
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Registration successful', () => {",
+									"    pm.response.to.have.status(201);",
+									"    pm.expect(json.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Nguyễn Văn Test\",\n    \"email\": \"test@pxu.edu.vn\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"role\": \"student\",\n    \"phone\": \"0987654321\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/register"
+					}
+				},
+				{
+					"name": "Get Current User (me)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns user data', () => {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": "{{base_url}}/api/v1/auth/me"
+					}
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Logout successful', () => {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(pm.response.json().success).to.be.true;",
+									"});",
+									"pm.collectionVariables.set('token', '');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": "{{base_url}}/api/v1/auth/logout"
+					}
+				},
+				{
+					"name": "Login - Error: Wrong Password (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns 401 for wrong credentials', () => {",
+									"    pm.response.to.have.status(401);",
+									"    pm.expect(pm.response.json().success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"student@pxu.edu.vn\",\n    \"password\": \"wrong_password\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/auth/login"
+					}
+				}
+			]
+		},
+		{
+			"name": "📅 Events",
+			"item": [
+				{
+					"name": "List All Events",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Returns event list', () => {",
+									"    pm.response.to.have.status(200);",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.expect(json.data).to.be.an('array');",
+									"    pm.expect(json.meta.pagination).to.exist;",
+									"});",
+									"pm.test('Event has required fields', () => {",
+									"    if (json.data.length > 0) {",
+									"        var ev = json.data[0];",
+									"        pm.expect(ev).to.have.property('id');",
+									"        pm.expect(ev).to.have.property('title');",
+									"        pm.expect(ev).to.have.property('capacity');",
+									"        pm.expect(ev).to.have.property('registered_count');",
+									"        pm.expect(ev).to.have.property('is_full');",
+									"        pm.expect(ev).to.have.property('category');",
+									"    }",
+									"});",
+									"// Save first event ID for other tests",
+									"if (json.data && json.data.length > 0) {",
+									"    pm.collectionVariables.set('event_id', json.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/events",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "events"]
+						},
+						"description": "Danh sách sự kiện. Hỗ trợ filter:\n- ?search=keyword\n- ?category=<id>\n- ?status=published\n- ?from_date=2026-01-01\n- ?to_date=2026-12-31"
+					}
+				},
+				{
+					"name": "List Events – Filter by Category",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/events?category=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "events"],
+							"query": [{"key": "category", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "List Events – Search",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/events?search=hackathon",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "events"],
+							"query": [{"key": "search", "value": "hackathon"}]
+						}
+					}
+				},
+				{
+					"name": "Get Event Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns event detail', () => {",
+									"    pm.response.to.have.status(200);",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.expect(json.data.tags).to.be.an('array');",
+									"    pm.expect(json.data.organizer).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": "{{base_url}}/api/v1/events/{{event_id}}"
+					}
+				},
+				{
+					"name": "Get Event Detail – Not Found (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns 404 for missing event', () => {",
+									"    pm.response.to.have.status(404);",
+									"    pm.expect(pm.response.json().success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": "{{base_url}}/api/v1/events/9999999"
+					}
+				}
+			]
+		},
+		{
+			"name": "📝 Registrations",
+			"item": [
+				{
+					"name": "My Registrations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns my registrations list', () => {",
+									"    pm.response.to.have.status(200);",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.expect(json.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": "{{base_url}}/api/v1/user/registrations"
+					}
+				},
+				{
+					"name": "Register for Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"pm.test('Registration submitted', () => {",
+									"    pm.expect(json.success).to.be.true;",
+									"    if (json.data) {",
+									"        pm.collectionVariables.set('registration_id', json.data.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event_id\": {{event_id}},\n    \"note\": \"Tôi muốn tham gia sự kiện này để học hỏi thêm kinh nghiệm.\"\n}"
+						},
+						"url": "{{base_url}}/api/v1/registrations"
+					}
+				},
+				{
+					"name": "Register – Validation Error (422)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns 422 validation error', () => {",
+									"    pm.response.to.have.status(422);",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.be.false;",
+									"    pm.expect(json.errors).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": "{{base_url}}/api/v1/registrations"
+					}
+				},
+				{
+					"name": "Register – Unauthorized (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns 401 without token', () => {",
+									"    pm.response.to.have.status(401);",
+									"    pm.expect(pm.response.json().success).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event_id\": 1\n}"
+						},
+						"url": "{{base_url}}/api/v1/registrations"
+					}
+				},
+				{
+					"name": "Cancel Registration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cancellation response', () => {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"url": "{{base_url}}/api/v1/registrations/{{registration_id}}"
+					}
+				}
+			]
+		}
+	]
+}
